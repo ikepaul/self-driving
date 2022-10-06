@@ -7,4 +7,4 @@ data Car = Car {pos :: Point, size :: Size, dir :: Double, speed :: Double, acc 
 type Size = (Double, Double)
 
 newCar :: Double -> Double -> Car
-newCar x y = Car (x, y) (40, 100) (- pi / 2) 0 0.4 7 0.15
+newCar x y = Car (x, y) (40, 100) (- pi / 2) 0 0.4 10 0.15

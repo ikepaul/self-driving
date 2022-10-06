@@ -10,6 +10,7 @@ import Data.Maybe
 import Draw
 import Graphics.UI.Threepenny
 import Road
+import Sensor
 
 main :: IO ()
 main = startGUI defaultConfig initGame
@@ -24,10 +25,11 @@ initGame window = do
   pure body
     #+ [column [element canvas]]
   pure body # set style [("background-color", "gray")]
-
+  let startCar = newCar (laneCenter newRoad 1) 450
   carControllerRef <- liftIO $ newIORef (newController :: Controller)
   roadRef <- liftIO $ newIORef (newRoad :: Road)
-  carRef <- liftIO $ newIORef (newCar (laneCenter newRoad 1) 450 :: Car)
+  carRef <- liftIO $ newIORef (startCar :: Car)
+  sensorRef <- liftIO $ newIORef (initSensor startCar :: Sensor)
 
   on keydown body $ \keyCode -> do
     let maybeEventAction = readAction keyCode
@@ -43,19 +45,20 @@ initGame window = do
       carController <- liftIO $ modifyIORef carControllerRef (toggleController eventAction False)
       return ()
 
-  timer1 <- set interval 20 timer
+  timer1 <- set interval 15 timer
   start timer1
-  on tick timer1 $ \() -> gameLoop window canvas carRef carControllerRef roadRef
+  on tick timer1 $ \() -> gameLoop window canvas carRef carControllerRef roadRef sensorRef
 
   --gameLoop window canvas
 
   return ()
 
-gameLoop :: Window -> Element -> IORef Car -> IORef Controller -> IORef Road -> UI ()
-gameLoop window canvas carRef carControllerRef roadRef = do
+gameLoop :: Window -> Element -> IORef Car -> IORef Controller -> IORef Road -> IORef Sensor -> UI ()
+gameLoop window canvas carRef carControllerRef roadRef sensorRef = do
   (Car (x, y) (w, h) d v a mv f) <- liftIO $ readIORef carRef
   (Controller cf cr cb cl) <- liftIO $ readIORef carControllerRef
   road <- liftIO $ readIORef roadRef
+  (Sensor n l s c) <- liftIO $ readIORef sensorRef
 
   let dv = fromIntegral (fromEnum cf) * a - fromIntegral (fromEnum cb) * a
   let newV = calcV v dv mv f
@@ -63,9 +66,11 @@ gameLoop window canvas carRef carControllerRef roadRef = do
   let dx = cos newD * newV
   let dy = sin newD * newV
   let myCar = Car (x + dx, y + dy) (w, h) newD newV a mv f
+  let mySensor = Sensor n l s myCar
 
   pure canvas # set fillStyle (solidColor (RGB 100 100 100))
   drawRoad canvas road (y + dy)
+  drawFixedSensor canvas mySensor 450
   drawFixedCar canvas myCar 450
 
   liftIO $ writeIORef carRef myCar

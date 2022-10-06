@@ -5,6 +5,7 @@ import qualified Control.Monad
 import Data.Fixed (mod')
 import Graphics.UI.Threepenny
 import Road
+import Sensor
 import Utils (lerp)
 
 draw :: Element -> UI ()
@@ -82,4 +83,30 @@ drawDashedLine canvas x step y = do
   beginPath canvas
   moveTo (x, y) canvas
   lineTo (x, y + step) canvas
+  stroke canvas
+
+drawFixedSensor :: Element -> Sensor -> Double -> UI ()
+drawFixedSensor canvas sensor offset = do
+  let rays = getRays sensor
+  mapM_ (drawFixedRay canvas offset) rays
+
+drawFixedRay :: Element -> Double -> Ray -> UI ()
+drawFixedRay canvas offset (Ray a (sx, sy) (ex, ey)) = do
+  pure canvas # set lineWidth 3
+  pure canvas # set strokeStyle "yellow"
+  moveTo (sx, offset) canvas
+  lineTo (ex, offset - (sy - ey)) canvas
+  stroke canvas
+
+drawSensor :: Element -> Sensor -> UI ()
+drawSensor canvas sensor = do
+  let rays = getRays sensor
+  mapM_ (drawRay canvas) rays
+
+drawRay :: Element -> Ray -> UI ()
+drawRay canvas (Ray a s e) = do
+  pure canvas # set lineWidth 3
+  pure canvas # set strokeStyle "yellow"
+  moveTo s canvas
+  lineTo e canvas
   stroke canvas
