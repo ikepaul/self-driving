@@ -94,6 +94,7 @@ drawFixedRay :: Element -> Double -> Ray -> UI ()
 drawFixedRay canvas offset (Ray a (sx, sy) (ex, ey)) = do
   pure canvas # set lineWidth 3
   pure canvas # set strokeStyle "yellow"
+  beginPath canvas
   moveTo (sx, offset) canvas
   lineTo (ex, offset - (sy - ey)) canvas
   stroke canvas
@@ -107,6 +108,16 @@ drawRay :: Element -> Ray -> UI ()
 drawRay canvas (Ray a s e) = do
   pure canvas # set lineWidth 3
   pure canvas # set strokeStyle "yellow"
+  beginPath canvas
   moveTo s canvas
   lineTo e canvas
+  stroke canvas
+
+drawFixedReading :: Element -> Ray -> Point -> Double -> UI ()
+drawFixedReading canvas (Ray a (cx, cy) (ex, ey)) (sx, sy) offset = do
+  pure canvas # set lineWidth 3
+  pure canvas # set strokeStyle "black"
+  beginPath canvas
+  moveTo (sx, offset - (cy - sy)) canvas
+  lineTo (ex, offset - (cy - ey)) canvas
   stroke canvas

@@ -8,7 +8,7 @@ import qualified Control.Monad
 import Data.IORef
 import Data.Maybe
 import Draw
-import Graphics.UI.Threepenny
+import Graphics.UI.Threepenny hiding (map)
 import Road
 import Sensor
 
@@ -67,13 +67,19 @@ gameLoop window canvas carRef carControllerRef roadRef sensorRef = do
   let dy = sin newD * newV
   let myCar = Car (x + dx, y + dy) (w, h) newD newV a mv f
   let mySensor = Sensor n l s myCar
+  let myRays = getRays mySensor
+  let readings = map ((,) <*> getReading (borders road)) myRays
 
   pure canvas # set fillStyle (solidColor (RGB 100 100 100))
   drawRoad canvas road (y + dy)
   drawFixedSensor canvas mySensor 450
+  mapM_ (uncurry (showReading canvas (x + dx, y + dy) 450)) readings
   drawFixedCar canvas myCar 450
 
   liftIO $ writeIORef carRef myCar
+
+showReading :: Element -> Point -> Double -> Ray -> Maybe Point -> UI ()
+showReading canvas c offset ray reading = Control.Monad.when (isJust reading) (drawFixedReading canvas ray (fromMaybe c reading) 450)
 
 calcV v dv mv f
   | (v + dv) == 0 = 0
